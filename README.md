@@ -30,4 +30,5 @@ The code generates a unique correlation ID for each log message, this can be ove
 
 You can configure the logger by editing the config file and db connection file.
 
-Please make sure to replace the placeholder fields such as config.loggly.token, config.loggly.subdomain, config.papertrail.host and config.papertrail.port with the actual values for your application.
+Please make sure to replace the placeholder fields such as 
+`config.loggly.token`, `config.loggly.subdomain`, `config.papertrail.host` and `config.papertrail.port` with the actual values for your application.
