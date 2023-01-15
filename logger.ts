@@ -1,4 +1,5 @@
 const winston = require('winston');
+const shortid = require('shortid');
 const { combine, timestamp, printf, label, colorize, json } = winston.format;
 require('winston-loggly');
 require('winston-papertrail');
@@ -77,6 +78,6 @@ const log = (level, message, context) => {
     logger.log({ level, message, ...context });
 }
 
-function generateCorrelationId(){
-  // code to generate unique correlation ID
+function generateCorrelationId() {
+    return shortid.generate();
 }
