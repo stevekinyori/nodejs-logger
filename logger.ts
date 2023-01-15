@@ -1,13 +1,15 @@
 const winston = require('winston');
-const moment = require('moment');
-const { combine, timestamp, printf, label, colorize } = winston.format;
+const { combine, timestamp, printf, label, colorize, json } = winston.format;
 require('winston-loggly');
+require('winston-papertrail');
 require('winston-daily-rotate-file');
 const env = process.env.NODE_ENV || 'development';
+const db = require('./db'); // import your database connection
+const config = require('./config'); // import your config file
 
 // Custom format that includes timestamp, level, and message
 const customFormat = printf(info => {
-    return `[${moment().format()}] [${info.level.toUpperCase()}]: ${info.message}`;
+    return `[${info.timestamp}] [${info.level.toUpperCase()}]: ${info.message}`;
 });
 
 const logTransports = [
@@ -15,6 +17,7 @@ const logTransports = [
         format: combine(
             colorize(),
             label({ label: 'Logger' }),
+            timestamp(),
             customFormat
         )
     }),
@@ -24,11 +27,16 @@ const logTransports = [
 
 if (env === 'production') {
     logTransports.push(new winston.transports.Loggly({
-        token: "your-loggly-token",
-        subdomain: "your-loggly-subdomain",
+        token: config.loggly.token,
+        subdomain: config.loggly.subdomain,
         tags: ["Winston-NodeJS"],
         json: true
-    }))
+    }));
+    logTransports.push(new winston.transports.Papertrail({
+        host: config.papertrail.host,
+        port: config.papertrail.port,
+        level: 'error'
+    }));
 }
 
 const rotateTransport = new winston.transports.DailyRotateFile({
@@ -41,9 +49,18 @@ const rotateTransport = new winston.transports.DailyRotateFile({
 
 logTransports.push(rotateTransport);
 
+if(config.logToDB) {
+    logTransports.push(new winston.transports.MongoDB({
+        db: db.connection,
+        collection: 'logs',
+        storeHost: true
+    }));
+}
+
 const logger = winston.createLogger({
     level: env === 'production' ? 'error' : 'debug',
     format: combine(
+        json(),
         timestamp(),
         customFormat
     ),
@@ -54,22 +71,12 @@ const logger = winston.createLogger({
     exitOnError: false
 });
 
-const log = (level, message) => {
-    logger.log({ level, message });
+const log = (level, message, context) => {
+    context = context || {};
+    context.correlationId = context.correlationId ||  generateCorrelationId();
+    logger.log({ level, message, ...context });
 }
 
-module.exports = {
-    log: log,
-    info: (message) => {
-        log('info', message);
-    },
-    debug: (message) => {
-        log('debug', message);
-    },
-    warn: (message) => {
-        log('warn', message);
-    },
-    error: (message) => {
-        log('error', message);
-    }
-};
+function generateCorrelationId(){
+  // code to generate unique correlation ID
+}
