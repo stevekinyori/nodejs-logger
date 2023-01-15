@@ -10,6 +10,8 @@ This is a logger for a Node.js express application that uses the winston library
 * Support for different environments, in production mode it will only log error level messages
 * Support for logging to a database like MongoDB, MySQL, or PostgreSQL
 * Support for logging to a cloud service like AWS CloudWatch, Google Cloud Logging, or Azure Log Analytics
+
+
 To use this logger in your express application, you need to install the following dependencies:
 
 * winston
@@ -17,6 +19,7 @@ To use this logger in your express application, you need to install the followin
 * winston-papertrail
 * winston-daily-rotate-file
 * shortid
+
 You also need to import your database connection and config file, which are required for the MongoDB and remote logging transports.
 
 The logger uses a custom format that includes a timestamp, log level, and message. It also includes a label and colorize for console transport. The log files rotate daily and keep for 14 days, and also archive as a zip file. The remote logging options are only enabled in production mode.
